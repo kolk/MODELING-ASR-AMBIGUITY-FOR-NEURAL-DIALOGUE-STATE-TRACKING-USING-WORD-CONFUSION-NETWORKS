@@ -285,7 +285,7 @@ class Model(nn.Module):
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
 
             # train using a confusion-network
-            elif args.train_using == 'confnet':
+            elif args.train_using == 'confnet' or args.train_using == 'aug_confnet':
                 # pad the confusion network to max parallel arc size
                 padded_confnet, scores, sent_lens, all_par_arc_lens = pad_confnet([e.num['cnet'] for e in batch], self.emb_fixed, self.device,  args.max_par_arc, vocab=self.vocab)
                 utterance, utterance_len = pad([e.num['transcript'] for e in batch], self.emb_fixed, self.device, pad=eos)
@@ -316,7 +316,7 @@ class Model(nn.Module):
                 loss, ys = self.infer_with_transcript(batch, utterance, utterance_len, acts, ontology, args)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
 
-            elif args.train_using == 'asr':
+            elif args.train_using == 'asr' or args.train_using == 'aug_asr':
                 asr_utterance, asr_utterance_len, asr_scores = pad_asr([e.num['cnet_asr'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 loss, ys = self.infer_with_asr(batch, asr_utterance, asr_utterance_len, acts, ontology, asr_scores, args)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}

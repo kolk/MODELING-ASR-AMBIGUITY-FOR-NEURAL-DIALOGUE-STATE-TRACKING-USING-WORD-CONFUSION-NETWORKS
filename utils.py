@@ -13,7 +13,7 @@ import random
 
 fix = {'centre': 'center', 'areas': 'area', 'post code': 'postcode', 'dontcare': 'dont care', 'addressess': 'address', 'addresses': 'address', 'gastropub' : 'gastro pub', 'addre': 'address', 'signapore':'singapore', 'vegitarian':'vegetarian', 'catalanian':'catalonian', 'europene':'european', 'portugeuse':'portuguese', 'euorpean':'european', 'asian ori':'asian oriental', 'malyasian':'malaysian', 'restuarant':'restaurant', 'chineese':'chinese', 'chinses':'chinese', 'itailian':'italian', 'signaporian':'singaporean', 'malyasian':'malaysian', 'earetree':'mediterranean', 'adddress':'address', 'nymber':'number', 'arotrian':'eritrean', 'thatll':'that', 'derately':'moderately', 'tailand':'thailand', 'moroccon':'moroccan', 'foo':'food', 'addrss':'address', 'moderat':'moderate', 'eartrain':'eritrean', 'bristish':'british', 'restauran':'restaurant', 'cantonates':'cantonese', 'spani':'spanish', 'scandanavian':'scandinavian', 'ori':'oriental', 'earatree':'mediterranean', 'gasper': 'gastro', 'earatrain':'eritrean', 'ran': 'range', 'restaraunt': 'restaurant', 'ffood':'food', 'pri':'priced', 'halo':'halal', 'canope':'canapes', 'modreately':'moderately', 'mediteranian':'mediterranean', 'endonesian': 'indonesian', 'europ':'european', 'ostro':'australian', 'rerestaurant':'restaurant', 'airitran': 'eritrean', 'turkiesh':'turkish', 'medetanian':'mediterranean', 'restaurnt':'restaurant', 'airatarin':'eritrean', 'vietna':'vietnamese', 'signaporean': 'singaporean', 'medterranean':'mediterranean', 'modereate': 'moderate', 'baskey':'basque', 'modertley':'moderately', 'jamcian': 'jamaican', 'carraibean': 'carribean', 'jamcian':'jamaican', 'fdod':'food', 'veitnamese':'vietnamese', 'addresseses':'address', 'venetian':'venesian', 'brazillian':'brazilian', 'europea':'european', 'fus':'fusion', 'unusal':'unusual', 'fre':'french', 'austral':'austria', 'canopus':'canapes', 'ye':'yes', 'yea':'yeah', 'enlish':'english', 'pricerange': 'price range', 'bask': 'basque', 'vinesha':'venetian','labenese': 'labanese'}
 
-def load_dataset(dataset, splits=('train', 'dev', 'test', 'test_asr')):
+def load_dataset(dataset, splits=('train', 'dev', 'test', 'test_asr'), is_aug=True):
     if dataset=='dstc':
         from dataset_dstc_clean_asr import Dataset, Ontology
         dann = dann_dstc
@@ -36,6 +36,9 @@ def load_dataset(dataset, splits=('train', 'dev', 'test', 'test_asr')):
         with open(os.path.join(dann, '{}.json'.format(split))) as f:
             logging.warning('loading split {}'.format(split))
             dataset[split] = Dataset.from_dict(json.load(f))
+            if split == 'train' and not is_aug:
+                ind = int(len(dataset[split])/2)
+                dataset[split].dialogues = dataset[split].dialogues[:ind]
     logging.info('dataset sizes: {}'.format(pformat({k: len(v) for k, v in dataset.items()})))
     return dataset, ontology, vocab, E
 

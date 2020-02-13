@@ -17,7 +17,10 @@ def run(args):
     torch.manual_seed(args.seed)
     seed(args.seed)
 
-    dataset, ontology, vocab, Eword = load_dataset(args.dataset)
+    is_aug = False
+    if args.train_using == "aug_confnet" or args.train_using == "aug_asr":
+        is_aug = True
+    dataset, ontology, vocab, Eword = load_dataset(args.dataset, is_aug=is_aug)
     model = load_model(args.model, args, ontology, vocab)
     model.save_config()
     model.load_emb(Eword)
@@ -65,7 +68,7 @@ def get_args():
     parser.add_argument('--infer_with_confnet', action='store_true', help='use confnet for inference')
     parser.add_argument('--asr_number', type=int, default=1, help='number of asr utterance used during inference')
     parser.add_argument('--asr_average_method', type=str, default='sum', help='method to accumulate ASR utterances: sum, wrighted_sum, mean')
-    parser.add_argument('--train_using', type=str, default='transcript', help='train using [asr, transcript, confnet]')
+    parser.add_argument('--train_using', type=str, default='transcript', help='train using [asr, transcript, confnet, aug_confnet, aug_asr]')
     parser.add_argument('--max_par_arc', type=int, default=5, help='max number of parallel arcs in the confnet')
     parser.add_argument('--infer_with_confnet_best_pass', action='store_true', help='use confnet for inference')
     parser.add_argument('--visualize_attention', action='store_true', help='Visualize the attention weights during eval')
