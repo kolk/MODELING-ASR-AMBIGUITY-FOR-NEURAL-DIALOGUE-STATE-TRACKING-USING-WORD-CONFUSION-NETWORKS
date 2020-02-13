@@ -44,7 +44,7 @@ python train.py --gpu 0  --dataset dstc_clean_asr --infer_with_asr
 ```
 To train and evaluate with confnet during training, run
 ```
-python train.py --dataset dstc_clean_confnet --gpu 0 --dexp <path-to-checkpoint> --local_dropout 0.2  --global_dropout 0.2 --emb_dropout 0.2 --word_dropout 0.0 --batch_size 50 --lr 0.001 --eps 0.00000001 --threshold 0.5 --selfattn_dropout 0 --train_using confnet --model glad_with_confnet --infer_with_confnet --epoch 70 --max_par_arc <confnet_par_arc_size>
+python train.py --dataset dstc --gpu 0 --dexp <path-to-checkpoint> --local_dropout 0.2  --global_dropout 0.2 --emb_dropout 0.2 --word_dropout 0.0 --batch_size 50 --lr 0.001 --eps 0.00000001 --threshold 0.5 --selfattn_dropout 0 --train_using confnet --model glad_with_confnet --infer_with_confnet --epoch 70 --max_par_arc <confnet_par_arc_size>
 ```
 This saves models at `exp/glad_with_confnet/default`
 
@@ -69,6 +69,6 @@ python evaluate.py --gpu 0 --split test exp/glad_with_confnet/default --infer_wi
 ```
 To infer with confnet, run
 ```
-python evaluate.py <path-to-checkpoint> --split test --gpu 0 --dataset dstc_clean_confnet --infer_with_confnet
+python evaluate.py <path-to-checkpoint> --split test --gpu 0 --dataset dstc --infer_with_confnet
 ```
 
