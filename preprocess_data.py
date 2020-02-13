@@ -11,10 +11,11 @@ from dataset import Dataset, Ontology
 
 root_dir = os.path.dirname(__file__)
 data_dir = os.path.join(root_dir, 'data', 'woz')
-
+data_dir_dstc = os.path.join(root_dir, 'data', 'dstc')
 
 draw = os.path.join(data_dir, 'raw')
 dann = os.path.join(data_dir, 'ann')
+dann_dstc = os.path.join(data_dir_dstc, 'ann')
 
 splits = ['dev', 'train', 'test']
 
