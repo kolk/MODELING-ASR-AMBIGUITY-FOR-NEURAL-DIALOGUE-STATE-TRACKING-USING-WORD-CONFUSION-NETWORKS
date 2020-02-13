@@ -25,6 +25,8 @@ Subsequent runs will be much faster.
 ```
 python preprocess_data.py
 ```
+The data should be present in the directory structure `<root-directory>/data/dstc/ann/<json-files>`
+
 
 # Train model
 
@@ -36,16 +38,26 @@ python train.py --gpu 0
 ```
 To run with the cleaned DSTC2 dataset, run
 ```
-python train.py --gpu 0  --dataset dstc_clean_asr 
+python train.py --gpu 0  --dataset dstc 
 ```
 To evaluate with ASR utterances during training, run
 ```
-python train.py --gpu 0  --dataset dstc_clean_asr --infer_with_asr
+python train.py --gpu 0  --dataset dstc --infer_with_asr
 ```
 To train and evaluate with confnet during training, run
 ```
 python train.py --dataset dstc --gpu 0 --dexp <path-to-checkpoint> --local_dropout 0.2  --global_dropout 0.2 --emb_dropout 0.2 --word_dropout 0.0 --batch_size 50 --lr 0.001 --eps 0.00000001 --threshold 0.5 --selfattn_dropout 0 --train_using confnet --model glad_with_confnet --infer_with_confnet --epoch 70 --max_par_arc <confnet_par_arc_size>
 ```
+
+To use different training settings, use argument `--train_using confnet` with:
+```
+--train_using confnet aug_confnet
+--train_using confnet confnet
+--train_using confnet asr
+--train_using confnet aug_asr
+--train_using confnet transcript
+```
+
 This saves models at `exp/glad_with_confnet/default`
 
 # Evaluation
