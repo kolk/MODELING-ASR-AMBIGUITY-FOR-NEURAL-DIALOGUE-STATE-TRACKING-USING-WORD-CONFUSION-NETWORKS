@@ -13,9 +13,6 @@ class ConfnetEncoder(nn.Module):
         self.context_weight = nn.Parameter(torch.Tensor(2 * hidden_size, 1))
         self.dropout = nn.Dropout(0.2)
 
-        embed_size = 400#hidden_size
-        self.gru = nn.GRU(embed_size, hidden_size, bidirectional=True)
-        #self.tan = torch.nn.tanh()
         self._create_weights(mean=0.0, std=0.05)
 
     def _create_weights(self, mean=0.0, std=0.05):
