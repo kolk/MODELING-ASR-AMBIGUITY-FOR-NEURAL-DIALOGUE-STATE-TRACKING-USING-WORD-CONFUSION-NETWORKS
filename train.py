@@ -73,6 +73,10 @@ def get_args():
     parser.add_argument('--infer_with_confnet_best_pass', action='store_true', help='use confnet for inference')
     parser.add_argument('--visualize_attention', action='store_true', help='Visualize the attention weights during eval')
     parser.add_argument('--joint_training', action='store_true', help='Train asr or confnet embeddings jointly with transcript')
+    parser.add_argument('--ver1', action='store_true', help="use pi instead of alpha in eq 4")
+    parser.add_argument('--ver2', action='store_true', help="summation of p")
+    parser.add_argument('--ver3', action='store_true', help='remove pi from eq 1')
+    parser.add_argument('--ver4', action='store_true', help="pi*tanh(w1*Emb)")
 
     args = parser.parse_args()
     args.dout = os.path.join(args.dexp, args.model, args.nick)

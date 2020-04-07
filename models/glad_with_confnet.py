@@ -101,7 +101,7 @@ class GLADEncoder(nn.Module):
         nn.init.uniform_(self.beta_raw, -0.01, 0.01)
 
     def beta(self, slot):
-        return F.sigmoid(self.beta_raw[self.slots.index(slot)])
+        return torch.sigmoid(self.beta_raw[self.slots.index(slot)])
 
     def forward(self, x, x_len, slot, utterance2=None, utterance2_len=None, default_dropout=0.2):
         local_rnn = getattr(self, '{}_rnn'.format(slot))
@@ -213,7 +213,7 @@ class Model(nn.Module):
         
         loss = 0
         for s in self.ontology.slots:
-            ys[s] = F.sigmoid(ys[s])
+            ys[s] = torch.sigmoid(ys[s])
             if self.training:
                 loss += F.binary_cross_entropy(ys[s], labels[s])
                 if args.joint_training:
@@ -252,7 +252,7 @@ class Model(nn.Module):
             y_acts = torch.cat(q_acts, dim=0).mm(C_vals.transpose(0, 1))
 
             # combine the scores
-            ys[s] = F.sigmoid(y_utts + self.score_weight * y_acts)
+            ys[s] = torch.sigmoid(y_utts + self.score_weight * y_acts)
         if self.training:
             # create label variable and compute loss
             labels = {s: [len(self.ontology.values[s]) * [0] for i in range(len(batch))] for s in self.ontology.slots}
@@ -278,25 +278,25 @@ class Model(nn.Module):
         ontology = {s: pad(v, self.emb_fixed, self.device, pad=eos) for s, v in self.ontology.num.items()}
          
         if self.training:
-            
+            """ 
             if args.train_using == 'confnet_best_pass':
                 utterance, utterance_len = pad([get_cnet_best_pass(e.num['cnet'], self.vocab.word2index('</s>'), self.vocab.word2index('!null'), self.vocab.word2index('<s>')) for e in batch], self.emb_fixed, self.device, pad=eos)
                 loss, ys = self.infer_with_transcript(batch, utterance, utterance_len, acts, ontology, args)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
-
+            """
             # train using a confusion-network
-            elif args.train_using == 'confnet' or args.train_using == 'aug_confnet':
+            if args.train_using == 'confnet' or args.train_using == 'aug_confnet':
                 # pad the confusion network to max parallel arc size
                 padded_confnet, scores, sent_lens, all_par_arc_lens = pad_confnet([e.num['cnet'] for e in batch], self.emb_fixed, self.device,  args.max_par_arc, vocab=self.vocab)
                 utterance, utterance_len = pad([e.num['transcript'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 output_list = torch.tensor([]).cuda()
 
-                padded_confnet = padded_confnet.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
-                scores = scores.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
-                all_par_arc_lens = all_par_arc_lens.permute(1,0) #(lens, batch)
-                for i, sc, par_arc_lens in zip(padded_confnet, scores, all_par_arc_lens): # for each par_arcs at time i in the batch
-                    output_confnet, most_attentive_arc, all_attention_arcs, most_attentive_arc_weights = \
-                        self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens)
+                padded_confnet_ = padded_confnet.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
+                scores_ = scores.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
+                all_par_arc_lens_ = all_par_arc_lens.permute(1,0) #(lens, batch)
+                for i, sc, par_arc_lens in zip(padded_confnet_, scores_, all_par_arc_lens_): # for each par_arcs at time i in the batch
+                    #output_confnet, most_attentive_arc, all_attention_arcs, most_attentive_arc_weights = self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens)
+                    output_confnet=self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens, args).contiguous()
                     output_list = torch.cat((output_list, output_confnet.unsqueeze(0)), dim=0)
 
                 output_confnet = output_list.permute(1,0,2) #(batch, max_sent_len, hid_dim)
@@ -304,6 +304,7 @@ class Model(nn.Module):
                 loss, ys = self.infer_with_transcript(batch, output_confnet, sent_lens, acts, ontology, args, utterance, utterance_len)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
             
+            """
             elif args.train_using == 'transcript':
                 utterance, utterance_len = pad([e.num['transcript'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 batch_size, max_len, dim = utterance.size()
@@ -316,13 +317,15 @@ class Model(nn.Module):
                 loss, ys = self.infer_with_transcript(batch, utterance, utterance_len, acts, ontology, args)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
 
+            
             elif args.train_using == 'asr' or args.train_using == 'aug_asr':
                 asr_utterance, asr_utterance_len, asr_scores = pad_asr([e.num['cnet_asr'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 loss, ys = self.infer_with_asr(batch, asr_utterance, asr_utterance_len, acts, ontology, asr_scores, args)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
-            
+            """
         else:
             # Evaluation
+            """
             if args.infer_with_asr:
                 asr_utterance, asr_utterance_len, asr_scores = pad_asr([e.num['cnet_asr'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 loss, ys = self.infer_with_asr(batch, asr_utterance, asr_utterance_len, acts, ontology, asr_scores, args)
@@ -331,7 +334,8 @@ class Model(nn.Module):
                 utterance, utterance_len = pad([get_cnet_best_pass(e.num['cnet'], self.vocab.word2index('</s>'), self.vocab.word2index('!null'), self.vocab.word2index('<s>')) for e in batch], self.emb_fixed, self.device, pad=eos)
                 loss, ys = self.infer_with_transcript(batch, utterance, utterance_len, acts, ontology, args)
                 return loss, {s: v.data.tolist() for s, v in ys.items()}
-            elif args.infer_with_confnet:
+            """
+            if args.infer_with_confnet:
                 utterance, utterance_len = pad([e.num['transcript'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 padded_confnet, scores, sent_lens, all_par_arc_lens = pad_confnet([e.num['cnet'] for e in batch], self.emb_fixed, self.device, args.max_par_arc, pad=eos, vocab=self.vocab)
                 output_list = torch.tensor([]).cuda()
@@ -346,7 +350,8 @@ class Model(nn.Module):
                 batch_all_attention_arcs = torch.tensor([], dtype=torch.float).cuda()
                 batch_most_attentive_arc_weights = torch.tensor([], dtype=torch.float).cuda()
                 for i, sc, par_arc_lens in zip(padded_confnet, scores, all_par_arc_lens):
-                    output_confnet, best_arc_indices, all_attention_arcs, most_attentive_arc_weights  = self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens)
+                    #output_confnet, best_arc_indices, all_attention_arcs, most_attentive_arc_weights  = self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens)
+                    output_confnet = self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens, args)
                     output_list = torch.cat((output_list, output_confnet.unsqueeze(0)), dim=0)
 
                     if args.visualize_attention:
@@ -361,6 +366,8 @@ class Model(nn.Module):
 
                 attention_best_pass_sents = []
                 padded_confnet_words = []
+                batch_most_attentive_arc_weights = []
+                batch_all_attention_arcs = []
                 if args.visualize_attention:
                     attention_best_pass = attention_best_pass.permute(1,0)
                     batch_most_attentive_arc_weights = batch_most_attentive_arc_weights.permute(1,0)
