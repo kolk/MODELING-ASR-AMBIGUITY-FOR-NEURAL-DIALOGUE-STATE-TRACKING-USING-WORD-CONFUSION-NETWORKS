@@ -34,7 +34,8 @@ class ConfnetEncoder(nn.Module):
         #print('v size', v.size())
         alpha = self.v_bar(q).squeeze()
         #### masking: Mask the padding ####
-        mask = torch.arange(max_par_arcs)[None, :].to("cuda") < lengths[:, None].to("cuda").type(torch.float)
+        mask = torch.arange(max_par_arcs)[None, :].to("cuda").type(torch.float) \
+               < lengths[:, None].to("cuda").type(torch.float)
         mask = mask.type(torch.float)
         masked_alpha = torch.where(mask == False, torch.tensor([float("-inf") - 1e-10], device=q.device), alpha)
         attention = torch.softmax(masked_alpha, dim=1)
