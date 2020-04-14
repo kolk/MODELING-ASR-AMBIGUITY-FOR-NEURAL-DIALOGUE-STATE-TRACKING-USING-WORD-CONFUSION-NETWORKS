@@ -83,4 +83,11 @@ To infer with confnet, run
 ```
 python evaluate.py <path-to-checkpoint> --split test --gpu 0 --dataset dstc --infer_with_confnet
 ```
+Different experiment setting:
+1) ver1: Use ![img](http://latex.codecogs.com/svg.latex?Embedding_%7BCN%7D%28C_t%29%26%3D%26%5Csum_i%5Cpi_t%5Eiq_t%5Ei) instead of ![img](http://latex.codecogs.com/svg.latex?Embedding_%7BCN%7D%28C_t%29%26%3D%26%5Csum_i%5Calpha_t%5Eiq_t%5Ei)
 
+2) ver2: Change eq 4 to ![img](http://latex.codecogs.com/svg.latex?Embedding_%7BCN%7D%28C_t%29%26%3D%26%5Csum_ip_t%5Ei)
+
+3) ver3: Change eq 4 to ![img](http://latex.codecogs.com/svg.latex?Embedding_%7BCN%7D%28C_t%29%3D%5Csum_i%5Cpi_t%5Ei%5Ctanh%28W_1Embedding%28w_t%5Ei%29%29)
+
+4) Remove pi from eq 1.
