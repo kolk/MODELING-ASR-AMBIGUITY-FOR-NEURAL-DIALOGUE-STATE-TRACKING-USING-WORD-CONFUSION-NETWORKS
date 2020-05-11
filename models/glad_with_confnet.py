@@ -143,7 +143,7 @@ class Model(nn.Module):
         self.l2 = torch.nn.CosineEmbeddingLoss()
         self.l2_norm_loss = torch.nn.MSELoss()
         self.emb_fixed = FixedEmbedding(len(vocab), args.demb, dropout=args.emb_dropout)#args.dropout.get('emb', 0.2))
-        self.confnet_encoder = ConfnetEncoder(hidden_size=int(args.demb/2))
+        self.confnet_encoder = ConfnetEncoder(hidden_size=int(args.demb/2), device=self.device)
         self.utt_encoder = GLADEncoder(args.demb, args.dhid, self.ontology.slots, local_dropout=args.local_dropout, global_dropout=args.global_dropout, selfattn_dropout=args.selfattn_dropout)#dropout=args.dropout)
         self.act_encoder = GLADEncoder(args.demb, args.dhid, self.ontology.slots, local_dropout=args.local_dropout, global_dropout=args.global_dropout, selfattn_dropout=args.selfattn_dropout)#dropout=args.dropout)
         self.ont_encoder = GLADEncoder(args.demb, args.dhid, self.ontology.slots, local_dropout=args.local_dropout, global_dropout=args.global_dropout, selfattn_dropout=args.selfattn_dropout) #dropout=args.dropout)
@@ -289,7 +289,7 @@ class Model(nn.Module):
                 # pad the confusion network to max parallel arc size
                 padded_confnet, scores, sent_lens, all_par_arc_lens = pad_confnet([e.num['cnet'] for e in batch], self.emb_fixed, self.device,  args.max_par_arc, vocab=self.vocab)
                 utterance, utterance_len = pad([e.num['transcript'] for e in batch], self.emb_fixed, self.device, pad=eos)
-                output_list = torch.tensor([]).cuda()
+                output_list = torch.tensor([]).to(self.device)
 
                 padded_confnet_ = padded_confnet.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
                 scores_ = scores.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
@@ -338,17 +338,17 @@ class Model(nn.Module):
             if args.infer_with_confnet:
                 utterance, utterance_len = pad([e.num['transcript'] for e in batch], self.emb_fixed, self.device, pad=eos)
                 padded_confnet, scores, sent_lens, all_par_arc_lens = pad_confnet([e.num['cnet'] for e in batch], self.emb_fixed, self.device, args.max_par_arc, pad=eos, vocab=self.vocab)
-                output_list = torch.tensor([]).cuda()
+                output_list = torch.tensor([]).to(self.device)
                 padded_confnet = padded_confnet.permute(1, 0, 2) # (max_sent_len, batch, max_par_arc_len)
                 scores = scores.permute(1, 0, 2)
                 all_par_arc_lens = all_par_arc_lens.permute(1,0)
 
 
                 # most attended words
-                attention_best_pass = torch.tensor([], dtype=torch.long).cuda()#torch.zeros((padded_confnet.shape(1), padded_confnet.shape(0), dtype=np.float)
+                attention_best_pass = torch.tensor([], dtype=torch.long).to(self.device)#torch.zeros((padded_confnet.shape(1), padded_confnet.shape(0), dtype=np.float)
                 # all attention weights
-                batch_all_attention_arcs = torch.tensor([], dtype=torch.float).cuda()
-                batch_most_attentive_arc_weights = torch.tensor([], dtype=torch.float).cuda()
+                batch_all_attention_arcs = torch.tensor([], dtype=torch.float).to(self.device)
+                batch_most_attentive_arc_weights = torch.tensor([], dtype=torch.float).to(self.device)
                 for i, sc, par_arc_lens in zip(padded_confnet, scores, all_par_arc_lens):
                     #output_confnet, best_arc_indices, all_attention_arcs, most_attentive_arc_weights  = self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens)
                     output_confnet = self.confnet_encoder(i, sc, logger, self.emb_fixed, par_arc_lens, args)
@@ -523,7 +523,7 @@ class Model(nn.Module):
 
     def load(self, fname):
         logging.info('loading model from {}'.format(fname))
-        state = torch.load(fname)
+        state = torch.load(fname, map_location=torch.device("cpu"))
         self.load_state_dict(state['model'])
         self.set_optimizer()
         self.optimizer.load_state_dict(state['optimizer'])

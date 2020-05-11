@@ -43,7 +43,7 @@ if __name__ == '__main__':
     if args.split not in dataset.keys():
         print(splits + ' file not found')
     
-    dataset[args.split].dialogues = dataset[args.split].dialogues[:1117]
+    #dataset[args.split].dialogues = dataset[args.split].dialogues[:1117]
     logging.info('Making predictions for {} dialogues and {} turns'.format(len(dataset[args.split]), len(list(dataset[args.split].iter_turns()))))
     preds, attention_best_pass, most_attentive_arc_weights, all_attention_arcs, padded_confnet_words = model.run_pred(dataset[args.split], args_save)
     pprint(dataset[args.split].evaluate_preds(preds, vocab, attention_best_pass, most_attentive_arc_weights, all_attention_arcs, padded_confnet_words))

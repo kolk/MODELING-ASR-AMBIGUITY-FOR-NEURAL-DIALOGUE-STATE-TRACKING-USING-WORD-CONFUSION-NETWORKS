@@ -6,8 +6,9 @@ import numpy as np
 import csv
 
 class ConfnetEncoder(nn.Module):
-    def __init__(self, hidden_size=50):
+    def __init__(self, hidden_size=50, device="cuda"):
         super(ConfnetEncoder, self).__init__()
+        self.device = device
         self.thetav = nn.Linear(in_features=2*hidden_size, out_features=2*hidden_size)
         self.v_bar = nn.Linear(in_features=2 * hidden_size, out_features=1)
 
@@ -17,7 +18,7 @@ class ConfnetEncoder(nn.Module):
 
         """
         # word embedding
-        output = emb(input.to('cuda'))
+        output = emb(input.to(self.device))
         #output = self.dropout(output)       
 
         sc = scores.unsqueeze(-1).expand(output.size()).float()
@@ -34,8 +35,8 @@ class ConfnetEncoder(nn.Module):
         #print('v size', v.size())
         alpha = self.v_bar(q).squeeze()
         #### masking: Mask the padding ####
-        mask = torch.arange(max_par_arcs)[None, :].to("cuda").type(torch.float) \
-               < lengths[:, None].to("cuda").type(torch.float)
+        mask = torch.arange(max_par_arcs)[None, :].to(self.device).type(torch.float) \
+               < lengths[:, None].to(self.device).type(torch.float)
         mask = mask.type(torch.float)
         masked_alpha = torch.where(mask == False, torch.tensor([float("-inf") - 1e-10], device=q.device), alpha)
         attention = torch.softmax(masked_alpha, dim=1)
