@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--infer_with_confnet', action='store_true', help='use confnet for inference')
     parser.add_argument('--visualize_attention', action='store_true', help='Visualize the attention weights during eval')
     parser.add_argument('--forward_pass_time', action='store_true', help='forward pass time')
+    parser.add_argument('--batch_size', type=int, default=1, help='batch size')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,7 @@ if __name__ == '__main__':
         print('args_save', type(args_save))
         args_save.gpu = args.gpu
         args_save.forward_pass_time = args.forward_pass_time
+        args_save.batch_size = args.batch_size
     pprint(args_save)
 
     dataset, ontology, vocab, Eword = load_dataset(args.dataset)
