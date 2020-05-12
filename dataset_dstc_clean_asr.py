@@ -190,14 +190,14 @@ class Dataset:
         stopwords = ['erm', 'aha', 'uhm' , 'mmm' , 'uhh', 'umm',  'ahh', 'hmm', 'oh', 'em', 'er', 'eh', 'uh', 'mm', 'ah','um', 'oops', 'haha']
         i = 0
         j = 0
-        total_time = 0
+        #total_time = 0
         for d in self.dialogues:
             pred_state = {}
             gold_state = {}
             j+=1
             turn_time = 0.0
             for t in d.turns:
-                start = time.time()
+                #start = time.time()
                 gold_request = set([(s, v) for s, v in t.turn_label if s == 'request'])
                 gold_inform = set([(s, v) for s, v in t.turn_label if s != 'request' and v != ''])
                 pred_request = set([(s, v) for s, v in preds[i] if s == 'request'])
@@ -218,12 +218,12 @@ class Dataset:
                     gold_recovered.add(('inform', s, v))
                 joint_goal.append(gold_recovered == pred_recovered)
                 i += 1
-                end = time.time()
-                turn_time += (end-start)
-                total_time += turn_time
-                print("turn time", (end-start))
+                #end = time.time()
+                #turn_time += (end-start)
+                #total_time += turn_time
+                #print("turn time", (end-start))
                 
-        print('total time', total_time)
+        #print('total time', total_time)
         return {'turn_inform': np.mean(inform), 'turn_request': np.mean(request), 'joint_goal': np.mean(joint_goal)}
 
     def record_preds(self, preds, to_file):

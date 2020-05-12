@@ -77,6 +77,8 @@ def get_args():
     parser.add_argument('--ver2', action='store_true', help="summation of p")
     parser.add_argument('--ver3', action='store_true', help='remove pi from eq 1')
     parser.add_argument('--ver4', action='store_true', help="pi*tanh(w1*Emb)")
+    parser.add_argument('--forward_pass_time', action='store_true', help='forward pass time')
+
 
     args = parser.parse_args()
     args.dout = os.path.join(args.dexp, args.model, args.nick)

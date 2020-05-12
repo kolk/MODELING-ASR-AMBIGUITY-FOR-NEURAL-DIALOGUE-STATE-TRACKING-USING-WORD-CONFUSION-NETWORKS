@@ -4,7 +4,7 @@ import logging
 from argparse import ArgumentParser, Namespace
 from pprint import pprint
 from utils import load_dataset, load_model
-
+import time
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_par_arc', type=int, default=5, help='max number of parallel arcs in the confnet')
     parser.add_argument('--infer_with_confnet', action='store_true', help='use confnet for inference')
     parser.add_argument('--visualize_attention', action='store_true', help='Visualize the attention weights during eval')
-
+    parser.add_argument('--forward_pass_time', action='store_true', help='forward pass time')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -30,6 +30,7 @@ if __name__ == '__main__':
         args_save = Namespace(**j)
         print('args_save', type(args_save))
         args_save.gpu = args.gpu
+        args_save.forward_pass_time = args.forward_pass_time
     pprint(args_save)
 
     dataset, ontology, vocab, Eword = load_dataset(args.dataset)
@@ -45,7 +46,9 @@ if __name__ == '__main__':
     
     #dataset[args.split].dialogues = dataset[args.split].dialogues[:1117]
     logging.info('Making predictions for {} dialogues and {} turns'.format(len(dataset[args.split]), len(list(dataset[args.split].iter_turns()))))
+    start = time.time()
     preds, attention_best_pass, most_attentive_arc_weights, all_attention_arcs, padded_confnet_words = model.run_pred(dataset[args.split], args_save)
+    print('inference time', (time.time()-start))
     pprint(dataset[args.split].evaluate_preds(preds, vocab, attention_best_pass, most_attentive_arc_weights, all_attention_arcs, padded_confnet_words))
 
     if args.fout:
