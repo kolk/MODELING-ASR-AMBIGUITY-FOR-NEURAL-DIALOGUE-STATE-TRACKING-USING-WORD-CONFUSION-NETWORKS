@@ -57,8 +57,13 @@ To use different training settings, use argument `--train_using` with:
 --train_using aug_asr
 --train_using transcript
 ```
-
 This saves models at `exp/glad_with_confnet/default`
+
+To use similarity loss, use:
+```
+python train.py --dataset dstc --gpu 0 --dexp <path-to-checkpoint> --local_dropout 0.2  --global_dropout 0.2 --emb_dropout 0.2 --word_dropout 0.0 --batch_size 50 --lr 0.001 --eps 0.00000001 --threshold 0.5 --selfattn_dropout 0 --train_using confnet --model glad_with_confnet --infer_with_confnet --epoch 70 --max_par_arc <confnet_par_arc_size> --joint_training
+```
+
 
 # Evaluation
 
@@ -83,6 +88,11 @@ To infer with confnet, run
 ```
 python evaluate.py <path-to-checkpoint> --split test --gpu 0 --dataset dstc --infer_with_confnet
 ```
+To check inferene time for 1 forward pass, 
+```
+python evaluate.py <path-to-checkpoint> --split test --gpu 0 --dataset dstc --infer_with_confnet --forward_pass_time
+```
+
 Different experiment setting:
 1) ver1: Use ![img](http://latex.codecogs.com/svg.latex?Embedding_%7BCN%7D%28C_t%29%26%3D%26%5Csum_i%5Cpi_t%5Eiq_t%5Ei) instead of ![img](http://latex.codecogs.com/svg.latex?Embedding_%7BCN%7D%28C_t%29%26%3D%26%5Csum_i%5Calpha_t%5Eiq_t%5Ei)
 
