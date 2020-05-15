@@ -14,6 +14,7 @@ import random
 from utils import sequence_mask, get_cnet_best_pass, get_cleaned_cnet, pad_confnet, pad, pad_asr
 import time
 from models.confnet_enc import ConfnetEncoder
+from models.confnet_enc2 import ConfnetEncoder as old_ConfnetEncoder
 
 def run_rnn(rnn, inputs, lens):
     # sort by lens
@@ -121,12 +122,13 @@ class GLADEncoder(nn.Module):
             global_h2 = run_rnn(self.global_rnn, utterance2, utterance2_len)
             h2 = F.dropout(local_h2, local_dropout, self.training) * beta + F.dropout(global_h2, global_dropout, self.training) * (1-beta)
             c2 = F.dropout(local_selfattn(h2, utterance2_len), local_dropout, self.training) * beta + F.dropout(self.global_selfattn(h2, utterance2_len), global_dropout, self.training) * (1-beta)
+            if not torch.cuda.is_available():
+                h2, c2 = h2.to("cpu"), c2.to("cpu")
         c = F.dropout(local_selfattn(h, x_len), local_dropout, self.training) * beta + F.dropout(self.global_selfattn(h, x_len), global_dropout, self.training) * (1-beta)
         if torch.cuda.is_available():
             h, c = h.cuda(), c.cuda()
         else:
             h, c = h.to("cpu"), c.to("cpu")
-            h2, c2 = h2.to("cpu"), c2.to("cpu")
         return h, c, h2, c2
 
 
@@ -145,7 +147,10 @@ class Model(nn.Module):
         self.l2 = torch.nn.CosineEmbeddingLoss()
         self.l2_norm_loss = torch.nn.MSELoss()
         self.emb_fixed = FixedEmbedding(len(vocab), args.demb, dropout=args.emb_dropout)#args.dropout.get('emb', 0.2))
-        self.confnet_encoder = ConfnetEncoder(hidden_size=int(args.demb/2), device=self.device)
+        if args.old_encoder:
+            self.confnet_encoder = old_ConfnetEncoder(hidden_size=int(args.demb/2), device=self.device)
+        else:
+            self.confnet_encoder = ConfnetEncoder(hidden_size=int(args.demb/2), device=self.device)
         self.utt_encoder = GLADEncoder(args.demb, args.dhid, self.ontology.slots, local_dropout=args.local_dropout, global_dropout=args.global_dropout, selfattn_dropout=args.selfattn_dropout)#dropout=args.dropout)
         self.act_encoder = GLADEncoder(args.demb, args.dhid, self.ontology.slots, local_dropout=args.local_dropout, global_dropout=args.global_dropout, selfattn_dropout=args.selfattn_dropout)#dropout=args.dropout)
         self.ont_encoder = GLADEncoder(args.demb, args.dhid, self.ontology.slots, local_dropout=args.local_dropout, global_dropout=args.global_dropout, selfattn_dropout=args.selfattn_dropout) #dropout=args.dropout)
@@ -235,6 +240,7 @@ class Model(nn.Module):
             _, C_acts, _, _ = list(zip(*[self.act_encoder(a, a_len, slot=s) for a, a_len in acts]))
             _, C_vals, _, _ = self.ont_encoder(ontology[s][0], ontology[s][1], slot=s)
             H_utt, c_utt, H_utt2, c_utt2 = self.utt_encoder(utterance, utterance_len, slot=s, utterance2=utterance2, utterance2_len=utterance2_len) 
+
             # compute the utterance score
             q_utts = []
             cnt_diff = []
@@ -527,7 +533,7 @@ class Model(nn.Module):
 
     def load(self, fname):
         logging.info('loading model from {}'.format(fname))
-        state = torch.load(fname)
+        state = torch.load(fname,  map_location=torch.device('cpu'))
         self.load_state_dict(state['model'])
         self.set_optimizer()
         self.optimizer.load_state_dict(state['optimizer'])

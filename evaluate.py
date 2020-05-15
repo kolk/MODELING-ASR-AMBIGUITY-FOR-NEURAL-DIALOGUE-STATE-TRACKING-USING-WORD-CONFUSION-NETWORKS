@@ -22,6 +22,8 @@ if __name__ == '__main__':
     parser.add_argument('--visualize_attention', action='store_true', help='Visualize the attention weights during eval')
     parser.add_argument('--forward_pass_time', action='store_true', help='forward pass time')
     parser.add_argument('--batch_size', type=int, default=1, help='batch size')
+    parser.add_argument('--old_encoder', action="store_true", help="use old encoder")
+
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -33,6 +35,7 @@ if __name__ == '__main__':
         args_save.gpu = args.gpu
         args_save.forward_pass_time = args.forward_pass_time
         args_save.batch_size = args.batch_size
+        args_save.old_encoder = args.old_encoder
     pprint(args_save)
 
     dataset, ontology, vocab, Eword = load_dataset(args.dataset)
